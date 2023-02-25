@@ -462,10 +462,13 @@ return mealType
             await dailyRoot?.screenshot({path: 'Daily_Root.png'})
         }
 
+        // TODO: create switch statement with nested if statements to set selectors depending on the time of day / day
+        // ex: on saturday, the gril and daily root are not open in manzy, so we create a switch statement + if statement to make sure it doesn't try to select
+        // those meals without them existing
         switch(day){
             case(1):{
 
-                
+
             break;
             }
         }
