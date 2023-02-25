@@ -1,6 +1,7 @@
-import { type } from 'os';
 import * as puppeteer from 'puppeteer';
 import * as readline from 'readline';
+
+let headless:boolean = false;
 
 // activates i.o stream to prompt user questions
 let rl = readline.createInterface({
@@ -15,7 +16,7 @@ function delay(time: number | undefined) {
     });
  }
 
-let diningHall = "Tooker"; // hardcoded to tooker for now, to speed up testing
+let diningHall = "Manzanita"; // hardcoded for now, to speed up testing
 
 // storing dining hall homepages in a Map
 const dict = new Map<string, string>([
@@ -29,7 +30,7 @@ const dict = new Map<string, string>([
     ['Verde','https://asu.campusdish.com/DiningVenues/WestVerdeDiningPavilion'],
 ]);
   
-// Asks user what didning hall they want, and stores response
+// Asks user what dining hall they want, and stores response
 function getNameDiningHall(){
     rl.question('Type name of dining hall:\n1: Barrett\n2:Hassayampa\n3:Manzanita\n4:Pitchforks\n5:Tooker\n6:Taylor Place\n7:Citrus\n8:Verde\nAnswer: ', (answer) => {
     switch(answer.toLowerCase()) {
@@ -71,12 +72,24 @@ function getNameDiningHall(){
     });
 }
 
-// Uses current time and date to find which meal it currently is at Tooker Dining Hall
-function getTookerMealType(){
+// returns current [day, hours] in MST
+function getDateTime(){
+
     let date = new Date()
     let day = date.getDay() // 1 = mon, 2= tues, etc
-
     let hours = date.getHours() // 24-hour clock (17 = 5pm, etc)
+    return [day, hours] as const
+
+}
+
+console.log("Tooker Meal Type: "+getTookerMealType())
+console.log("Hassayampa Meal Type: " +getHassayampaMealType())
+console.log("Manzanita Meal Type: " +getManzanitaMealType())
+
+// Uses current time and date to find which meal it currently is at Tooker Dining Hall
+function getTookerMealType():String{
+
+    const [day, hours] = getDateTime()
     let mealType = ""
 
     /*
@@ -90,27 +103,26 @@ function getTookerMealType(){
 
         // friday
         case 5: {
-            if(hours>7 && hours <11) {
+            if(hours>=7 && hours <11) {
                 mealType = "breakfast"
-            } else if(hours > 11 && hours < 14){
+            } else if(hours >= 11 && hours < 14){
                 mealType = "lunch"
-            } else if(hours > 14 && hours < 16){
+            } else if(hours >= 14 && hours < 16){
                 mealType = "light lunch"
-            } else if(hours > 16 && hours < 19){
+            } else if(hours >= 16 && hours < 19){
                 mealType = "dinner"
             } else {
                 mealType = "closed"
             }    
-            
             break;
         } 
         // saturday
         case 6: {
-            if(hours > 10 && hours < 14){
+            if(hours >= 10 && hours < 14){
                 mealType = "brunch"
-            } else if(hours > 14 && hours < 16){
+            } else if(hours >= 14 && hours < 16){
                 mealType = "no food"
-            } else if(hours > 16 && hours < 19){
+            } else if(hours >= 16 && hours < 19){
                 mealType = "dinner"
             } else {
                 mealType = "closed"
@@ -156,9 +168,152 @@ function getTookerMealType(){
 
 }
 
+// Uses current time and date to find which meal it currently is at Hassayampa Dining Hall
+function getHassayampaMealType():String{
+    // mon - thurs 7am - 9pm
+    // friday 7am - 7pm
+    // saturday 8am - 7pm
+    // sunday 8am - 8pm
+
+    const [day, hours] = getDateTime()
+    let mealType = ""
+
+    switch(day){
+        // friday
+        case 5: {
+            if(hours>7 && hours <11) {
+                mealType = "breakfast"
+            } else if(hours > 11 && hours < 14){
+                mealType = "lunch"
+            } else if(hours > 14 && hours < 16){
+                mealType = "light lunch"
+            } else if(hours > 16 && hours < 19){
+                mealType = "dinner"
+            } else {
+                mealType = "closed"
+            }    
+            
+            break;
+        } 
+        // saturday
+        case 6: {
+             
+            if(hours > 8 && hours < 15){
+                mealType = "brunch"
+            } else if(hours > 15 && hours < 19){
+                mealType = "dinner"
+            } else {
+                mealType = "closed"
+            }   
+            break;
+        }
+
+        // sunday
+        case 7: {
+            
+            if(hours > 8 && hours < 15){
+                mealType = "brunch"
+            } else if(hours > 15 && hours < 20){
+                mealType = "dinner"
+            } else {
+                mealType = "closed"
+            }   
+            break;
+        } 
+
+        // mon - thurs
+        default: {      
+            if(hours > 7 && hours < 11){
+                mealType = "breakfast"
+            } else if(hours > 11 && hours < 14){
+                mealType = "lunch"
+            } else if(hours > 14 && hours < 16){
+                mealType = "light lunch"
+            } else if(hours > 16 && hours < 21){
+                mealType = "dinner"
+            } else {
+                mealType = "closed"
+            }   
+            break;
+        }
+
+    } 
+
+    return mealType
+
+}
+
+// Uses current time and date to find which meal it currently is at Pitchforks, Barrett, Manzanita Dining Hall (They all have the same hours)
+function getManzanitaMealType():String{ 
+
+    const [day, hours] = getDateTime()
+    let mealType = ""
+
+    switch(day){
+        // friday
+        case 5: {
+            if(hours>= 7 && hours < 11) {
+                mealType = "breakfast"
+            } else if(hours >= 11 && hours < 14){
+                mealType = "lunch"
+            } else if(hours >= 14 && hours < 16){
+                mealType = "light lunch"
+            } else if(hours >= 16 && hours < 19){
+                mealType = "dinner"
+            } else {
+                mealType = "closed"
+            }    
+            break;
+        } 
+        // saturday
+        case 6: {
+            if(hours >= 10 && hours < 14){
+                mealType = "brunch"
+            } else if(hours >= 14 && hours < 16){
+                mealType = "no food"
+            } else if(hours >= 16 && hours < 19){
+                mealType = "dinner"
+            } else {
+                mealType = "closed"
+            }    
+            break;
+        }
+
+        // sunday
+        case 7: {
+            
+            if(hours >= 10 && hours < 14){
+                mealType = "brunch"
+            } else if(hours >= 14 && hours < 16){
+                mealType = "no food"
+            } else if(hours >= 16 && hours < 20){
+                mealType = "dinner"
+            } else {
+                mealType = "closed"
+            }   
+            break;
+        } 
+
+        // mon - thurs
+        default: {      
+            if(hours >= 7 && hours < 11){
+                mealType = "breakfast"
+            } else if(hours >= 11 && hours < 14){
+                mealType = "lunch"
+            } else if(hours >= 14 && hours < 16){
+                mealType = "light lunch"
+            } else if(hours >= 16 && hours < 21){
+                mealType = "dinner"
+            } else {
+                mealType = "closed"
+            }   
+            break;
+        }
+    }
+return mealType
+}
 
 (async () => {
-
     if(diningHall ==''){
         await(getNameDiningHall())
     }
@@ -200,7 +355,7 @@ function getTookerMealType(){
     }
 
     //launches browser and navigates to link
-    const browser = await puppeteer.launch({headless:false});
+    const browser = await puppeteer.launch({headless:headless});
     const page = await browser.newPage();
     await page.goto('https://asu.campusdish.com/DiningVenues',{ waitUntil: 'networkidle0' });
 
@@ -241,26 +396,90 @@ function getTookerMealType(){
 
    // await page.click('#modal-root > div > div > div > div > div.sc-cCsOjp.gvlGSX > button.sc-bczRLJ.sc-gsnTZi.gObyWR.SlTeX.Done')
 
+   // set dimensions of screen
+   await page.setViewport({ width: 896, height: 896 });
+   delay(2000)
 
-    // wait for page to load properly
-    await page.waitForSelector('#\\32 2794')
+   
 
-    // finding and storing selectors for each meal
-    const dailyRoot = await page.$('#\\32 2794')
-    const homeZone = await page.$('#\\32 2792')
-    const grill = await page.$('#\\32 2793')
-    const pizza = await page.$('#\\32 2796')
-    const trueBalance = await page.$('#\\33 0185')
 
-    // setting dimensions of screen
-    await page.setViewport({ width: 896, height: 896 });
-    delay(2000)
+    if(diningHall == 'Tooker'){
 
-    // screenshotting each selector
-    await dailyRoot?.screenshot({path: 'Daily_Root.png'})
-    await homeZone?.screenshot({path: 'homeZone.png'})
-    await grill?.screenshot({path: 'Grill.png'})
-    await pizza?.screenshot({path: 'Pizza.png'})
-    await trueBalance?.screenshot({path: 'trueBalance.png'})
+        // ensure a random element on the page is loaded
+        await page.waitForSelector('#\\32 2794')
 
+        // finding and storing selectors for each meal type
+        const dailyRoot = await page.$('#\\32 2794')
+        const homeZone = await page.$('#\\32 2792')
+        const grill = await page.$('#\\32 2793')
+        const pizza = await page.$('#\\32 2796')
+        const trueBalance = await page.$('#\\33 0185')
+
+        // screenshotting each selector
+        await dailyRoot?.screenshot({path: 'Daily_Root.png'})
+        await homeZone?.screenshot({path: 'HomeZone.png'})
+        await grill?.screenshot({path: 'Grill.png'})
+        await pizza?.screenshot({path: 'Pizza.png'})
+        await trueBalance?.screenshot({path: 'TrueBalance.png'})
+
+    } else if(diningHall == 'Hassayampa'){
+
+        await page.waitForSelector('#\\33 0687')
+
+        // finding and storing selectors for each meal type
+
+        const dailyRoot = await page.$('#\\33 0687')
+        const homeZone = await page.$('#\\34 2068')
+        const grill = await page.$('#\\34 2074')
+        const pizza = await page.$('#\\34 2072')
+        const trueBalance = await page.$('#\\34 2070')
+
+        // screenshotting each selector
+
+        await dailyRoot?.screenshot({path: 'Daily_Root.png'})
+        await homeZone?.screenshot({path: 'Home_Zone.png'})
+        await grill?.screenshot({path: 'Grill.png'})
+        await pizza?.screenshot({path: 'Pizza.png'})
+        await trueBalance?.screenshot({path: 'True_Balance.png'})
+
+    } else if(diningHall == 'Manzanita'){
+
+        let [day, hours] = getDateTime()
+        await page.waitForSelector('#\\39 139')
+
+        // finding and storing selectors for each meal type
+
+        const homeZone = await page.$('#\\39 1398')
+        const grill = await page.$('#\\34 2074')
+        const pizza = await page.$('#\\39 140')
+        const trueBalance = await page.$('#\\34 2070')
+        const sazon = await page.$('#\\31 3991')
+        const homezone = await page.$('#\\39 139')
+
+        // daily root and grill only opens at dinner on saturday
+        if(day == 6 && getManzanitaMealType()=='Dinner'){
+            let dailyRoot = await page.$('#\\33 0687')
+            await dailyRoot?.screenshot({path: 'Daily_Root.png'})
+        }
+
+        switch(day){
+            case(1):{
+
+                
+            break;
+            }
+        }
+
+        //
+
+        // screenshotting each selector
+        await sazon?.screenshot({path: 'sazon.png'})
+        await homezone?.screenshot({path: 'Home_Zone.png'})
+        await grill?.screenshot({path: 'Grill.png'})
+        await pizza?.screenshot({path: 'Pizza.png'})
+        await trueBalance?.screenshot({path: 'True_Balance.png'})
+
+    }
+
+    await browser.close()
 })();
